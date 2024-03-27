@@ -1,17 +1,28 @@
 # control_servo.py
 
-import time
-import math
 import keyboard as kb
-# import smbus2
-
 import smbus
 
 import logging
 import time
 import math
 
-import OPi.GPIO as GPIO
+
+#constants for Control_servo:
+
+# Configure min and max servo pulse lengths
+servo_min = 130 # Min pulse length out of 4096 / 150/112
+servo_max = 510 # Max pulse length out of 4096 / 600/492
+
+UP = 'w'
+DOWN = 's'
+LEFT = 'a'
+RIGHT = 'd'
+
+UP_STOP = 510
+DOWN_STOP = 130
+LEFT_STOP = 130
+RIGHT_STOP = 510
 
 # Based on Adafruit Lib:
 # https://github.com/adafruit/Adafruit_Python_PCA9685/blob/master/Adafruit_PCA9685/PCA9685.py
@@ -123,10 +134,6 @@ class PCA9685(object):
     def __exit__(self, exception_type, exception_value, traceback):
         self.reset()
 
-# Configure min and max servo pulse lengths
-servo_min = 130 # Min pulse length out of 4096 / 150/112
-servo_max = 510 # Max pulse length out of 4096 / 600/492
-
 def map(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min + 1) / (in_max - in_min + 1) + out_min
 
@@ -154,31 +161,18 @@ class ServoPCA9685:
         time.sleep(0.005)
 
 i2cbus = smbus.SMBus(0)
-pca = PCA9685.PCA9685(i2cbus)
-s0 = ServoPCA9685.ServoPCA9685(pca, PCA9685.CHANNEL00)
-s1 = ServoPCA9685.ServoPCA9685(pca, PCA9685.CHANNEL01)
+pca = PCA9685(i2cbus)
+s0 = ServoPCA9685(pca, CHANNEL00)
+s1 = ServoPCA9685(pca, CHANNEL01)
 
-UP = 'w'
-DOWN = 's'
-LEFT = 'a'
-RIGHT = 'd'
-
-delta = 1
-UP_STOP = 510
-DOWN_STOP = 130
-LEFT_STOP = 130
-RIGHT_STOP = 510
-
-# pulsex = 130
-# pulsey = 130
 class Control_servo(object):
-    def __init__(self, pulsex = 130, pulsey = 130, button_pin_UP = 29, button_pin_DOWN = 31, button_pin_LEFT = 33, button_pin_RIGHT = 35):
-        self.pulsex = pulsex
-        self.pulsey = pulsey
+    def __init__(self, button_pin_UP = 29, button_pin_DOWN = 31, button_pin_LEFT = 33, button_pin_RIGHT = 35, pulsex = 130, pulsey = 130):
         self.button_pin_UP = button_pin_UP
         self.button_pin_DOWN = button_pin_DOWN
         self.button_pin_RIGHT = button_pin_RIGHT
         self.button_pin_LEFT = button_pin_LEFT
+        self.pulsex = pulsex
+        self.pulsey = pulsey
 
     def setX(self, x):
         self.pulsex = x
@@ -191,42 +185,25 @@ class Control_servo(object):
 
     def getY(self):
         return self.pulsey
-
-    def __move_servo(self):
-        pass
-        # if kb.is_pressed(UP) and self.pulsey + delta <= UP_STOP:
-        #     self.pulsey += delta
-        # if kb.is_pressed(DOWN) and self.pulsey - delta >= DOWN_STOP:
-        #     self.pulsey -= delta
-        # if kb.is_pressed(LEFT) and self.pulsex - delta >= LEFT_STOP:
-        #     self.pulsex -= delta
-        # if kb.is_pressed(RIGHT) and self.pulsex + delta <= RIGHT_STOP:
-        #     self.pulsex += delta
-        # s0.set_pulse(self.pulsex)
-        # s1.set_pulse(self.pulsey)
-
-    def run_key(self):
+    def run_key(self, delta = 15):
         while True:
             if kb.is_pressed(UP) and self.pulsey + delta <= UP_STOP:
-                self.pulsey += delta
+                self.pulsey += self.delta
             if kb.is_pressed(DOWN) and self.pulsey - delta >= DOWN_STOP:
-                self.pulsey -= delta
+                self.pulsey -= self.delta
             if kb.is_pressed(LEFT) and self.pulsex - delta >= LEFT_STOP:
-                self.pulsex -= delta
+                self.pulsex -= self.delta
             if kb.is_pressed(RIGHT) and self.pulsex + delta <= RIGHT_STOP:
-                self.pulsex += delta
+                self.pulsex += self.delta
 
             s0.set_pulse(self.pulsex)
             s1.set_pulse(self.pulsey)
 
-            print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
-            print(self.pulsex)
-            print(self.pulsey)
-            time.sleep(0.005)  # Для избежания постоянного обновления
+            # print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
+            # print(self.pulsex)
+            # print(self.pulsey)
 
-    def run_buttons(self):
-        print("SERVO BUTTONS START")
-
+    def run_buttons(self, delta = 15):
         GPIO.setmode(GPIO.BOARD)
 
         GPIO.setup(self.button_pin_UP, GPIO.IN)
@@ -234,59 +211,34 @@ class Control_servo(object):
         GPIO.setup(self.button_pin_RIGHT, GPIO.IN)
         GPIO.setup(self.button_pin_LEFT, GPIO.IN)
         while True:
-            # if kb.is_pressed(UP) and self.pulsey + delta <= UP_STOP:
-            #     self.pulsey += delta
-            # if kb.is_pressed(DOWN) and self.pulsey - delta >= DOWN_STOP:
-            #     self.pulsey -= delta
-            # if kb.is_pressed(LEFT) and self.pulsex - delta >= LEFT_STOP:
-            #     self.pulsex -= delta
-            # if kb.is_pressed(RIGHT) and self.pulsex + delta <= RIGHT_STOP:
-            #     self.pulsex += delta
-
             button_state_UP = GPIO.input(self.button_pin_UP)
             button_state_DOWN = GPIO.input(self.button_state_DOWN)
             button_state_RIGHT = GPIO.input(self.button_state_RIGHT)
             button_state_LEFT = GPIO.input(self.button_state_LEFT)
-            print(button_state_UP)
-            print(button_state_DOWN)
-            print(button_state_RIGHT)
-            print(button_state_LEFT)
+            # print(button_state_UP)
+            # print(button_state_DOWN)
+            # print(button_state_RIGHT)
+            # print(button_state_LEFT)
             if button_state_UP == GPIO.LOW and self.pulsey + delta <= UP_STOP:
-                self.pulsey += delta
-                print("UP +")
+                self.pulsey += self.delta
+                # print("UP +")
             if button_state_DOWN == GPIO.LOW and self.pulsey - delta >= DOWN_STOP:
-                self.pulsey -= delta
-                print("DOWN +")
+                self.pulsey -= self.delta
+                # print("DOWN +")
             if button_state_RIGHT == GPIO.LOW and self.pulsex + delta <= RIGHT_STOP:
-                self.pulsex += delta
-                print("RIGHT +")
+                self.pulsex += self.delta
+                # print("RIGHT +")
             if button_state_LEFT == GPIO.LOW and self.pulsex - delta >= LEFT_STOP:
-                self.pulsey -= delta
-                print("LEFT +")
+                self.pulsey -= self.delta
+                # print("LEFT +")
             time.sleep(0.1)
 
             s0.set_pulse(self.pulsex)
             s1.set_pulse(self.pulsey)
 
-            print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
-            print(self.pulsex)
-            print(self.pulsey)
-            time.sleep(0.005)  # Для избежания постоянного обновления
-    # def keyboard_control(self):
-    #     while(True):
-    #         # key = cv2.waitKey(5)
-    #         delta = 1
-    #         if kb.is_pressed('w'):
-    #             self.pulsey += delta
-    #         if kb.is_pressed('s'):
-    #             self.pulsey -= delta
-    #         if kb.is_pressed('a'):
-    #             self.pulsex -= delta
-    #         if kb.is_pressed('d'):
-    #             self.pulsex += delta
-    #         if kb.is_pressed('w') or kb.is_pressed('s') or kb.is_pressed('a') or kb.is_pressed('d'):
-    #             print(self.pulsex, self.pulsey)
-    #         time.sleep(0.005)
+            # print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
+            # print(self.pulsex)
+            # print(self.pulsey)
 
-    def greet(self):
-        print("Start")
+    def start(self):
+        print("Start listening keyboard...")

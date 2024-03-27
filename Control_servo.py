@@ -188,13 +188,13 @@ class Control_servo(object):
     def run_key(self, delta = 15):
         while True:
             if kb.is_pressed(UP) and self.pulsey + delta <= UP_STOP:
-                self.pulsey += self.delta
+                self.pulsey += delta
             if kb.is_pressed(DOWN) and self.pulsey - delta >= DOWN_STOP:
-                self.pulsey -= self.delta
+                self.pulsey -= delta
             if kb.is_pressed(LEFT) and self.pulsex - delta >= LEFT_STOP:
-                self.pulsex -= self.delta
+                self.pulsex -= delta
             if kb.is_pressed(RIGHT) and self.pulsex + delta <= RIGHT_STOP:
-                self.pulsex += self.delta
+                self.pulsex += delta
 
             s0.set_pulse(self.pulsex)
             s1.set_pulse(self.pulsey)
@@ -220,18 +220,17 @@ class Control_servo(object):
             # print(button_state_RIGHT)
             # print(button_state_LEFT)
             if button_state_UP == GPIO.LOW and self.pulsey + delta <= UP_STOP:
-                self.pulsey += self.delta
+                self.pulsey += delta
                 # print("UP +")
             if button_state_DOWN == GPIO.LOW and self.pulsey - delta >= DOWN_STOP:
-                self.pulsey -= self.delta
+                self.pulsey -= delta
                 # print("DOWN +")
             if button_state_RIGHT == GPIO.LOW and self.pulsex + delta <= RIGHT_STOP:
-                self.pulsex += self.delta
+                self.pulsex += delta
                 # print("RIGHT +")
             if button_state_LEFT == GPIO.LOW and self.pulsex - delta >= LEFT_STOP:
-                self.pulsey -= self.delta
+                self.pulsey -= delta
                 # print("LEFT +")
-            time.sleep(0.1)
 
             s0.set_pulse(self.pulsex)
             s1.set_pulse(self.pulsey)

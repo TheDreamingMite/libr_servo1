@@ -1,5 +1,6 @@
 # control_servo.py
 
+import OPi.GPIO as GPIO
 import keyboard as kb
 import smbus
 

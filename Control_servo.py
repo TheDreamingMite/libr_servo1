@@ -166,7 +166,7 @@ s0 = ServoPCA9685(pca, CHANNEL00)
 s1 = ServoPCA9685(pca, CHANNEL01)
 
 class Control_servo(object):
-    def __init__(self, button_pin_UP = 29, button_pin_DOWN = 31, button_pin_LEFT = 33, button_pin_RIGHT = 35, pulsex = 130, pulsey = 130):
+    def __init__(self, button_pin_UP = 11, button_pin_DOWN = 22, button_pin_LEFT = 23, button_pin_RIGHT = 24, pulsex = 130, pulsey = 130):
         self.button_pin_UP = button_pin_UP
         self.button_pin_DOWN = button_pin_DOWN
         self.button_pin_RIGHT = button_pin_RIGHT
@@ -210,26 +210,55 @@ class Control_servo(object):
         GPIO.setup(self.button_pin_DOWN, GPIO.IN)
         GPIO.setup(self.button_pin_RIGHT, GPIO.IN)
         GPIO.setup(self.button_pin_LEFT, GPIO.IN)
+
+        size_buf = 20
+        
+        buffer_UP = [1] * size_buf
+        pressed_UP = [0] * size_buf
+        
+        buffer_DOWN = [1] * size_buf
+        pressed_DOWN = [0] * size_buf
+        
+        buffer_RIGHT = [1] * size_buf
+        pressed_RIGHT = [0] * size_buf
+        
+        buffer_LEFT = [1] * size_buf
+        pressed_LEFT = [0] * size_buf
         while True:
             button_state_UP = GPIO.input(self.button_pin_UP)
-            button_state_DOWN = GPIO.input(self.button_state_DOWN)
-            button_state_RIGHT = GPIO.input(self.button_state_RIGHT)
-            button_state_LEFT = GPIO.input(self.button_state_LEFT)
+            buffer_UP.pop(0)
+            buffer_UP.append(button_state_UP)
+            
+            button_state_DOWN = GPIO.input(self.button_pin_DOWN)
+            buffer_DOWN.pop(0)
+            buffer_DOWN.append(button_state_DOWN)
+
+            button_state_RIGHT = GPIO.input(self.button_pin_RIGHT)
+            buffer_RIGHT.pop(0)
+            buffer_RIGHT.append(button_state_RIGHT)
+            
+            button_state_LEFT = GPIO.input(self.button_pin_LEFT)
+            buffer_LEFT.pop(0)
+            buffer_LEFT.append(button_state_LEFT)
+            
             # print(button_state_UP)
             # print(button_state_DOWN)
             # print(button_state_RIGHT)
             # print(button_state_LEFT)
-            if button_state_UP == GPIO.LOW and self.pulsey + delta <= UP_STOP:
+            
+            if button_state_UP == pressed_UP and self.pulsey + delta <= UP_STOP:
                 self.pulsey += delta
                 # print("UP +")
-            if button_state_DOWN == GPIO.LOW and self.pulsey - delta >= DOWN_STOP:
-                self.pulsey -= delta
+            if button_state_DOWN == pressed_DOWN and self.pulsey - delta >= DOWN_STOP:
+                self.pulsey += delta
                 # print("DOWN +")
-            if button_state_RIGHT == GPIO.LOW and self.pulsex + delta <= RIGHT_STOP:
+
+            if button_state_RIGHT == pressed_RIGHT and self.pulsex + delta <= RIGHT_STOP:
                 self.pulsex += delta
                 # print("RIGHT +")
-            if button_state_LEFT == GPIO.LOW and self.pulsex - delta >= LEFT_STOP:
-                self.pulsey -= delta
+
+            if button_state_LEFT == pressed_LEFT and self.pulsex - delta >= LEFT_STOP:
+                self.pulsex -= delta
                 # print("LEFT +")
 
             s0.set_pulse(self.pulsex)

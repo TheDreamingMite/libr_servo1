@@ -214,9 +214,9 @@ class Control_servo(object):
             value_X = bus_joy.read_byte(address_joy)
 
             if(value_BUT > 0):
-                value_BUT = "Button is ON"
-            else:
                 value_BUT = "Button is OFF"
+            else:
+                value_BUT = "Button is ON"
 # center: 194 and 199 MAX,MIN: (208, 10),(212,13)
             if value_Y > 207 and self.pulsey + delta <= UP_STOP:
                 self.pulsey += delta

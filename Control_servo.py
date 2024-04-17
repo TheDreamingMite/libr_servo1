@@ -165,12 +165,12 @@ pca = PCA9685(i2cbus)
 s0 = ServoPCA9685(pca, CHANNEL00)
 s1 = ServoPCA9685(pca, CHANNEL01)
 
+# Settings for joystick
+address_joy = 0x48
+bus_joy = smbus.SMBus(1)
+
 class Control_servo(object):
-    def __init__(self, button_pin_UP = 11, button_pin_DOWN = 22, button_pin_LEFT = 23, button_pin_RIGHT = 24, pulsex = 130, pulsey = 130):
-        self.button_pin_UP = button_pin_UP
-        self.button_pin_DOWN = button_pin_DOWN
-        self.button_pin_RIGHT = button_pin_RIGHT
-        self.button_pin_LEFT = button_pin_LEFT
+    def __init__(self, pulsex = 130, pulsey = 130):
         self.pulsex = pulsex
         self.pulsey = pulsey
 
@@ -202,8 +202,39 @@ class Control_servo(object):
             # print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
             # print(self.pulsex)
             # print(self.pulsey)
+    def run_joystik(self, delta = 15):
+        while(True):
+            bus_joy.write_byte(address_joy, 0x40)
+            value_BUT = bus_joy.read_byte(address_joy)
 
-    def run_buttons(self, delta = 15):
+            bus_joy.write_byte(address_joy, 0x41)
+            value_Y = bus_joy.read_byte(address_joy)
+
+            bus_joy.write_byte(address_joy, 0x42)
+            value_X = bus_joy.read_byte(address_joy)
+
+            if(value_BUT > 0):
+                value_BUT = "Button is ON"
+            else:
+                value_BUT = "Button is OFF"
+# center: 194 and 199 MAX,MIN: (208, 10),(212,13)
+            if value_Y > 207 and self.pulsey + delta <= DOWN_STOP:
+                self.pulsey += delta
+            if value_Y < 70 and self.pulsey - delta >= DOWN_STOP:
+                self.pulsey -= delta
+            if value_X > 202 and self.pulsex - delta >= LEFT_STOP:
+                self.pulsex -= delta
+            if value_X < 70 and self.pulsex + delta <= RIGHT_STOP:
+                self.pulsex += delta
+
+            s0.set_pulse(self.pulsex)
+            s1.set_pulse(self.pulsey)
+                
+            print(str(value_X) + "\t" + str(value_Y) + "\t" + str(value_BUT)) 
+            # print(f"pulsex: {self.pulsex}, pulsey: {self.pulsey}")
+            # print(self.pulsex)
+            # print(self.pulsey)
+    def run_buttons(self, delta = 15, button_pin_UP = 11, button_pin_DOWN = 22, button_pin_LEFT = 23, button_pin_RIGHT = 24):
         GPIO.setmode(GPIO.BOARD)
 
         GPIO.setup(self.button_pin_UP, GPIO.IN)

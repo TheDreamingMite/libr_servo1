@@ -218,7 +218,7 @@ class Control_servo(object):
             else:
                 value_BUT = "Button is OFF"
 # center: 194 and 199 MAX,MIN: (208, 10),(212,13)
-            if value_Y > 207 and self.pulsey + delta <= DOWN_STOP:
+            if value_Y > 207 and self.pulsey + delta <= UP_STOP:
                 self.pulsey += delta
             if value_Y < 70 and self.pulsey - delta >= DOWN_STOP:
                 self.pulsey -= delta
